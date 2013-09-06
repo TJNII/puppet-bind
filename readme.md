@@ -65,3 +65,26 @@ unique per zone view.
 Currently there is no bind::master or bind::slave classes as they contain site-specific data
 in the current revision.  See the example-master.pp and example-slave.pp manifest files for
 details on this.
+
+Example site config
+-------------------
+
+This assumes you have configured your master.pp and site.pp
+
+node "puppetmaster.example.com" {
+  # bind glue class
+  class { 'bind::puppetmaster': }
+}
+
+node "masns1.example.com" {
+  class {'bind::master': }
+}
+
+node "ns1.example.com" {
+  class {'bind::slave': }
+}
+
+node "ns2.example.com" {
+  class {'bind::slave': }
+}
+
