@@ -1,6 +1,12 @@
 Puppet-Bind
 ===========
 
+OS Support
+----------
+
+Currently only tested on Debian.
+May work in Ubuntu, expected to fail on RHEL.
+
 Overview
 --------
 
