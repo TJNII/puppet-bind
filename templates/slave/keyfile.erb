@@ -1,0 +1,17 @@
+#
+# Bind key file for <%= file %> <%= view %> view
+#
+# Key contents generated from exported resources to the puppetmaster
+#
+
+<% 
+require '/etc/puppet/modules/bind/templates/helpers.rb'
+if File.file?(source_keyfile)
+-%>
+key <%= makeKeyID(slave_hostname, view) %> {
+        algorithm hmac-md5;
+        secret "<%= File.new(source_keyfile, "r").gets.strip %>";
+};
+<% else -%>
+# Source file missing on puppetmaster
+<% end -%>

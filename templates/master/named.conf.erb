@@ -1,0 +1,126 @@
+#
+# PUPPET MANAGED FILE, DO NOT EDIT
+#
+# CUSTOM NAMED CONFIGURATION
+# UTILIZES CUSTOM PORT, RNDC PORT, AND PID FILE
+# CUSTOM ATTRIBUTES ALSO SET IN <%= default_file %>
+#
+# Master configuration for view <%= viewname %>
+
+# Slave Keys
+<% 
+require '/etc/puppet/modules/bind/templates/helpers.rb'
+slave_keyfiles = getExportedKeys(master_hostname, viewname)
+
+slave_data = Hash.new
+slave_keyfiles.sort.each do |keyfile|
+   hostname = getSlaveNameFromKeyName(keyfile)
+   if hostname != nil
+      slaveip = getServerInternalIP(hostname)
+      if slaveip != nil
+         slave_data[keyfile] = {
+            "hostname" => hostname,
+            "ip"       => slaveip,
+            "keyID"   => makeKeyID(hostname, viewname)
+      }		      		
+
+-%>
+# SLAVE: <%= hostname %>
+#   keyfile:  <%= keyfile %>
+#   hostname: <%= slave_data[keyfile]["hostname"] %>
+#   ip:       <%= slave_data[keyfile]["ip"] %>
+#   keyID:    <%= slave_data[keyfile]["keyID"] %>
+include "<%= keyfile %>";
+
+<%    else -%>
+# Slave <%= hostname %> disabled: Unable to determine internal IP
+<%    end 
+   else -%>
+# HOSTNAME PARSE FAILURE ON <%= keyfile %>
+<% end 
+end -%>
+
+# Main options
+options {
+        directory "/var/cache/bind";
+	pid-file  "<%= pid_file %>";
+
+        auth-nxdomain no;    # conform to RFC1035
+#        listen-on-v6 { any; };
+
+	listen-on port <%=  listen_port %> { any; };
+        allow-query { 
+	   127.0.0.0/8; 
+<%    slave_data.keys.sort.each do |key| -%>
+           <%= slave_data[key]["ip"] %>;
+<%    end -%>
+        };
+        version "Version quieries will be responded to when submitted on properly sized banknotes.";
+	recursion no;
+
+<% if slave_data.keys.length > 0 -%>
+	allow-transfer {
+<%    slave_data.keys.sort.each do |key| -%>
+           key <%= slave_data[key]["keyID"] %>;
+<%    end -%>
+        };
+
+        notify yes;
+        also-notify { 
+<%    slave_data.keys.sort.each do |key| -%>
+           <%= slave_data[key]["ip"] %>;
+<%    end -%>
+        };
+<% end -%>
+
+};
+
+controls {
+          inet 127.0.0.1 port <%=  nrdc_port %>  allow { localhost; };
+};
+
+view "<%= viewname -%>-view" {
+   # Query match statements
+<% if slave_data.keys.length > 0
+      slave_data.keys.sort.each do |key| -%>
+   server <%= slave_data[key]["ip"] %> { keys <%= slave_data[key]["keyID"] %>; };
+<%    end -%>
+   match-clients {
+<%    slave_data.keys.sort.each do |key| -%>
+      key <%= slave_data[key]["keyID"] %>;
+<%    end -%>
+      127.0.0.0/8;
+   };
+<% end -%>
+
+<%
+pathbase = "/etc/bind"
+
+zoneincludes = Hash.new
+zonenames.keys.sort.each do |key|
+   zoneincludes[zonenames[key]] = { "type" => "master", "file" => "#{pathbase}/maindb/#{key}.db" }
+end
+
+if include_internal_zones == true
+   # Internal zones
+   zoneincludes["168.192.IN-ADDR.ARPA"] = { "type" => "master", "file" => "#{pathbase}/maindb/#{viewname}.168.192.in-addr.arpa.db" }
+   for i in 16..31
+      zoneincludes["#{i}.172.IN-ADDR.ARPA"] = { "type" => "master", "file" => "#{pathbase}/maindb/#{viewname}.#{i}.172.in-addr.arpa.db" }
+   end
+   zoneincludes["10.IN-ADDR.ARPA"] = { "type" => "master", "file" => "#{pathbase}/maindb/#{viewname}.10.in-addr.arpa.db" }
+   zoneincludes["127.in-addr.arpa"] = { "type" => "master", "file" => "#{pathbase}/zones/dummy/db.127" }
+   zoneincludes["0.in-addr.arpa"] = { "type" => "master", "file" => "#{pathbase}/zones/dummy/db.0" }
+   zoneincludes["255.in-addr.arpa"] = { "type" => "master", "file" => "#{pathbase}/zones/dummy/db.255" }
+   zoneincludes["localhost"] = { "type" => "master", "file" => "#{pathbase}/zones/dummy/db.local" }
+   zoneincludes["."] = { "type" => "hint", "file" => "#{pathbase}/zones/dummy/db.root" }
+end
+-%>      
+
+<% zoneincludes.keys.sort.each do |key|
+   values = zoneincludes[key] -%>
+   zone "<%= key %>" {
+      type <%= values["type"] %>;
+      file "<%= values["file"] %>";      
+   };
+<% end %>
+};

@@ -1,0 +1,84 @@
+#
+# PUPPET MANAGED FILE: DO NOT EDIT
+#
+
+#
+# Bind conf include file for <%= viewname %> view
+#
+
+<%
+require '/etc/puppet/modules/bind/templates/helpers.rb'
+master_ip = getServerInternalIP(master)
+-%>
+
+# Include the key file
+include "/etc/bind/keys/<%= slave_hostname %>.<%= viewname %>.key";
+
+acl <%= viewname %> {
+<%
+getSlaveKeyViews(slave_resource_hostname).sort.each do |lview|
+   if lview != viewname -%>
+    # Required for proper reaction to zone notifies
+    ! key <%= makeKeyID(slave_hostname, lview) %>;
+<% end
+end -%>
+    key <%= makeKeyID(slave_hostname, viewname) %>;
+    localhost;
+<%
+acls.sort.each do |acl| -%>
+    <%= acl %>;
+<% end -%>
+};
+
+masters "<%= viewname %>-view-master" {
+    <%= master_ip %> port <%= master_port %> key <%= makeKeyID(slave_hostname, viewname) %>;
+};
+
+view "<%= viewname %>-view" {
+     match-clients { <%= viewname %>; };
+     allow-query { <%= viewname %>; };
+     server <%= master_ip %> { keys <%= makeKeyID(slave_hostname, viewname) %>; };
+<% if allow_recursion -%>
+     recursion yes;
+<% else -%>
+     recursion no;
+<% end -%>
+
+<%
+pathBase="/var/lib/bind/#{viewname}"
+
+zoneincludes = Hash.new
+zonenames.sort.each do |key|
+   zoneincludes[key] = "#{pathBase}_#{key}.db"
+end
+
+if include_internal_zones == true
+   # Internal zones
+   zoneincludes["168.192.IN-ADDR.ARPA"] = "#{pathBase}_168.192.in-addr.arpa.db"
+   for i in 16..31
+      zoneincludes["#{i}.172.IN-ADDR.ARPA"] = "#{pathBase}_#{i}.172.in-addr.arpa.db" 
+   end
+   zoneincludes["10.IN-ADDR.ARPA"]      = "#{pathBase}_10.in-addr.arpa.db"
+   zoneincludes["127.in-addr.arpa"]     = "#{pathBase}_db.127"
+   zoneincludes["0.in-addr.arpa"]       = "#{pathBase}_db.0"
+   zoneincludes["255.in-addr.arpa"]     = "#{pathBase}_db.255"
+   zoneincludes["localhost"]            = "#{pathBase}_db.local"
+
+# Hints file: Special case
+-%>
+     // prime the server with knowledge of the root servers
+     zone "." {
+        type hint;
+        file "/etc/bind/db.root";
+     };
+<% end -%>
+
+<% zoneincludes.keys.sort.each do |key| -%>
+   zone "<%= key %>" {
+      type slave;
+      masters { <%= viewname %>-view-master; };
+      file "<%= zoneincludes[key] %>";
+   };
+
+<% end %>
+};

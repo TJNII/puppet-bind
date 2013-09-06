@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+# PUPPET MANAGED FILE: DO NOT EDIT
+#
+# Wrapper around bind_custom to allow expected init operation
+#
+/etc/init.d/bind9_custom $1 <%= default_file %>
+exit $?

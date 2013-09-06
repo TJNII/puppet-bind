@@ -1,0 +1,61 @@
+;
+; PUPPET MANAGED FILE: DO NOT EDIT
+;
+; MASTER zone template to:
+;   - contain the SOA
+;   - contain the NS records
+;   - Include files for all other records
+;
+; Master template for <%= viewname %> <%= zone %> zone
+
+<% 
+require '/etc/puppet/modules/bind/templates/helpers.rb'
+
+# Get serial
+# Let's double memory consumption WHEEE!
+scopeVars = scope.to_hash
+if scopeVars.has_key?("bindserial_" + zone)
+   serial = scopeVars["bindserial_" + zone]
+else
+   serial = 0
+end
+
+nameservers = getViewNameservers(master_hostname, viewname)
+%>
+
+$TTL    8h
+<%= zone %>. IN SOA <%= nameservers[0] %>. <%= admin %>. (
+        ; The serial will lag by 1 puppet run
+        <%= serial %>      ; serial YYYYMMDDCC
+        8h              ; 8 hour slave refresh
+        1h              ; 1 hour retry
+        45d             ; 45 day expiration
+        1h )            ; 1 hour negative TTL
+
+; Name servers
+$INCLUDE <%= nsdbfile %>
+
+; Static DB files from puppet module (*.db files)
+<%
+# A little chicanery here:
+# Look at the module source tree, get a list of files,
+# and include them finessing the path
+begin
+   files = Dir[moduledir + "/files/zones/reverse_zones/" + zone + "/*.db"]
+rescue
+   # This will be thrown on no files.  Catch it and continue gracefully
+   files = Array.new
+end
+
+if files.length > 0
+   files.each do |file| -%>
+$INCLUDE /etc/bind/zones/reverse_zones/<%= zone %>/<%= File.basename(file) %>
+<% end 
+else %>
+; ( None )
+<% end -%>
+
+; Dynamic puppet-generated db files
+$INCLUDE /etc/bind/zones/reverse_zones/<%= viewname %>.dynamic.<%= zone %>.db
+
+; END

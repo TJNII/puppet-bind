@@ -1,0 +1,36 @@
+#
+# PUPPET MANAGED FILE, DO NOT EDIT
+#
+
+# Bind SLAVE server <%= slave_hostname %> (<%= slave_resource_hostname %>)
+# Master config propagated from <%= master %>
+
+<%
+require '/etc/puppet/modules/bind/templates/helpers.rb'
+master_ip = getServerInternalIP(master)
+-%>
+
+# Main options
+options {
+        directory "/var/cache/bind";
+        auth-nxdomain no;    # conform to RFC1035
+        listen-on-v6 { any; };
+
+        allow-query { 127.0.0.1; };
+        version "eleventeen";
+
+        allow-transfer { none; };
+        recursion no;
+        notify yes;
+        also-notify { <%= master_ip %>; };
+
+};
+
+# Include view configurations
+<% 
+slave_conffiles = getSlaveConfigs(slave_resource_hostname)
+
+slave_conffiles.sort.each do |conffile|
+-%>
+include "<%= conffile %>";
+<% end -%>

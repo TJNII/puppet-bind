@@ -1,0 +1,15 @@
+#
+# PUPPET MANAGED CONFIGURATION FILE
+# DO NOT EDIT
+#
+# Custom zone default file for Bind9 master zone
+# Utilized by bind9_custom script
+#
+
+# run resolvconf?
+RESOLVCONF=no
+
+# startup options for the server
+OPTIONS="-u bind -c <%= conf_file %>"
+PIDFILE=<%= pid_file %>
+NDCPORT=<%= nrdc_port %>
