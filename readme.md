@@ -71,20 +71,20 @@ Example site config
 
 This assumes you have configured your master.pp and site.pp
 
->node "puppetmaster.example.com" {
->  # bind glue class
->  class { 'bind::puppetmaster': }
->}
->
->node "masns1.example.com" {
->  class {'bind::master': }
->}
->
->node "ns1.example.com" {
->  class {'bind::slave': }
->}
->
->node "ns2.example.com" {
->  class {'bind::slave': }
->}
+    node "puppetmaster.example.com" {
+      # bind glue class
+      class { 'bind::puppetmaster': }
+    }
+
+    node "masns1.example.com" {
+      class {'bind::master': }
+    }
+    
+    node "ns1.example.com" {
+      class {'bind::slave': }
+    }
+    
+    node "ns2.example.com" {
+      class {'bind::slave': }
+    }
 
