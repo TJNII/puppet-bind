@@ -49,7 +49,7 @@ Update Time
 -----------
 
 Currently the module requires two puppet runs on the nameserver master to propagate a
-new record.  THe change process is as follows:
+new record.  The change process is as follows:
 
 * ---- RUN 1 ----
 * Puppet changes a member db file to modify a record
