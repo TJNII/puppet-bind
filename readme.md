@@ -45,6 +45,23 @@ This module pupulates the automatic records from facter facts (via the commonfac
 stored in the puppetDB.  A client side module is not required!  A, AAAA, and PTR records
 are automatically generated as appropriate.
 
+Update Time
+-----------
+
+Currently the module requires two puppet runs on the nameserver master to propagate a
+new record.  THe change process is as follows:
+
+---- RUN 1 ----
+*) Puppet changes a member db file to modify a record
+*) The db file change triggers exec of the serial script via puppet notify[]
+*) The serial incrementer script increments the source serial file on the filesystem
+
+---- RUN 2 ----
+*) Puppet pulls in the new serial and updates the main db file
+*) The main db file change triggers a reload of the bind service for the view
+*) The DNS daemon for the view reloads and notifies the slaves of a zone change
+*) The slaves request new zone data from the master and update their files.
+
 Site Specific Changes
 ---------------------
 
