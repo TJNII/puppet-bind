@@ -4,7 +4,6 @@ define bind::master::forwardzone (
   $zone,
   $admin,
   $master_hostname,
-  $moduledir = "/etc/puppet/modules/bind/", # doing == wrong...
   ) {
     $serialfile = "/etc/bind/serials/$viewname.serial"
     

@@ -6,7 +6,6 @@ define bind::master::reversezone (
   $master_hostname,
   $myNotify,
   $viewname,
-  $moduledir = "/etc/puppet/modules/bind/", # doing == wrong...
   ) {
     $serialfile = "/etc/bind/serials/$zone.serial"
     
