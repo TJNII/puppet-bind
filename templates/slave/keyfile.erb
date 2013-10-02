@@ -5,7 +5,7 @@
 #
 
 <% 
-require '/etc/puppet/modules/bind/templates/helpers.rb'
+require File.dirname(__FILE__) + '/../helpers.rb'
 if File.file?(source_keyfile)
 -%>
 key <%= makeKeyID(slave_hostname, view) %> {

@@ -7,7 +7,7 @@
 ; Separate file to trip serial regenration on update.
 ;
 <% 
-require '/etc/puppet/modules/bind/templates/helpers.rb'
+require File.dirname(__FILE__) + '/../helpers.rb'
 nameservers = getViewNameservers(master_hostname, viewname)
 -%>
 

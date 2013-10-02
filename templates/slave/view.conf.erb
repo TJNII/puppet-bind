@@ -7,7 +7,7 @@
 #
 
 <%
-require '/etc/puppet/modules/bind/templates/helpers.rb'
+require File.dirname(__FILE__) + '/../helpers.rb'
 master_ip = getServerInternalIP(master)
 -%>
 
