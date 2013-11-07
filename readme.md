@@ -86,7 +86,7 @@ details on this.
 Example site config
 -------------------
 
-This assumes you have configured your master.pp and site.pp
+This assumes you have configured your master.pp and slave.pp custom pp files as mentioned above.
 
     node "puppetmaster.example.com" {
       # bind glue class
