@@ -27,10 +27,8 @@ options {
         recursion no;
         notify yes;
         also-notify { <%= master_ip %>; };
-<% if edns_udp_size != nil -%>
 
         edns-udp-size <%= edns_udp_size %>;
-<% end -%>
 };
 
 # Include view configurations

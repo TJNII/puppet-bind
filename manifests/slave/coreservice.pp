@@ -20,7 +20,7 @@ class bind::slave::coreservice (
   $my_slave_resource_hostname = $fqdn,
   $manage_firewall = true,
   $disable_ipv6 = false,
-  $edns_udp_size = nil,
+  $edns_udp_size = 512,
   ) {
   
     include 'bind::slave::common'
