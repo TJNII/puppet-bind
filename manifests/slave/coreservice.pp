@@ -19,6 +19,7 @@ class bind::slave::coreservice (
   $my_slave_hostname = $fqdn,
   $my_slave_resource_hostname = $fqdn,
   $manage_firewall = true,
+  $disable_ipv6 = false,  
   ) {
   
     include 'bind::slave::common'
@@ -26,6 +27,13 @@ class bind::slave::coreservice (
     $slave_hostname = inline_template("<%= my_slave_hostname.downcase -%>")
     $slave_resource_hostname = inline_template("<%= my_slave_resource_hostname.downcase -%>")
     
+    file { "/etc/default/bind9":
+      owner   => root,
+      group   => root,
+      mode    => 644,
+      content => template("bind/common/default_bind9"),
+    }
+
     file { "/etc/bind/named.conf":
       owner   => root,
       group   => bind,
@@ -46,6 +54,7 @@ class bind::slave::coreservice (
       # Use stop and start, not restart
       hasrestart => false,
       subscribe  => [File["/etc/bind/named.conf"],
+                     File["/etc/default/bind9"],
                      File["/etc/bind/keys"],
                      ],
       require    => [ File["/etc/bind/rndc.key"],

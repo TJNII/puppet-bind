@@ -1,0 +1,9 @@
+#
+# PUPPET MANAGED FILE: DO NOT EDIT
+#
+
+# run resolvconf?
+RESOLVCONF=no
+
+# startup options for the server
+OPTIONS="-u bind<% if disable_ipv6 == true -%> -4<% end -%>"
